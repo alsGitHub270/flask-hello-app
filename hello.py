@@ -1,26 +1,33 @@
 import os
 
-from flask import Flask, url_for
+from flask import Flask, request, render_template, redirect, url_for, flash
 app = Flask(__name__)
 
-@app.route('/')
-def index():
-    return url_for('show_user_profile', username='richard')
+@app.route('/login', methods=['GET','POST'])
+def login():
+    error = None
+    if request.method == "POST":
+        if valid_login(request.form['username'], request.form['password']):
+            flash("Successfully logged in")
+            return redirect(url_for('welcome', username=request.form.get('username')))
+        else:
+            error = "Incorrect username and password"
+    return render_template('login.html', error=error)
+
+
+@app.route('/welcome/<username>')
+def welcome(username):
+    return render_template('welcome.html', username=username)
     
 
-@app.route('/user/<username>')
-def show_user_profile(username):
-    # show the user profile for passed user
-    return "User %s" % username
-
-
-@app.route('/post/<int:post_id>')
-def show_post(post_id):
-    return "Post {}".format(post_id)
-
+def valid_login(username, password):
+    if username == password:
+        return True
+    return False
 
 if __name__ == '__main__':
     host = os.getenv('IP', '0.0.0.0')   # for cloud 9
     port = int(os.getenv('PORT',5000))
     app.debug = True
+    app.secret_key = 'SuperSecretKey'
     app.run(host=host, port=port)
